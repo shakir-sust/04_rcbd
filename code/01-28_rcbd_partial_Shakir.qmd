@@ -49,12 +49,22 @@ summary(rcbd_df)
 glimpse(rcbd_df) #To check variable types i.e., how R is interpreting the variables
 ```
 # c) Wrangling
+
+##Important note: Question that will come in exam
+
+*Question: What do the "pipe" function do?*
+
+*Answer:* 
+
+The "pipe" function takes what is on its left and feeds that as the input of what is on its right. For example, the first pipe %>% in the following takes only "rcbd_dfw <- rcbd_df" as the data input and feeds to what is on its left. However, the second pipe takes everything that is on its right and feeds as input to what is on its left. Each pipe on any pipe flow is going to take everything before it (from the very beginning of the code chunk) as the input of the next function that is on the left of that pipe (not just  the immediate previous function as the input). Everything before that 2nd pipe %>% goes into the next function as the input. 
+
+
 ```{r rcbd_dfw}
-rcbd_dfw <- rcbd_df %>%
-  mutate(rep = factor(rep), #to treat "rep" i.e., "block" as categorical variable
-         nrate_kgha = factor(nrate_kgha), #to treat "nrate_kgha" as categorical variable
-         krate_kgha = factor(krate_kgha) #to treat "krate_kgha" as categorical variable
-         ) %>%
+rcbd_dfw <- rcbd_df %>% #1st pipe
+  mutate(rep = factor(rep), # "factor()" function converts "rep" from a "numeric" variable to "categorical" variable
+         nrate_kgha = factor(nrate_kgha),  #"factor()" function converts "numeric" variable to "categorical" variable
+         krate_kgha = factor(krate_kgha) #"factor()" function converts "numeric" variable to "categorical" variable
+         ) %>% #2nd pipe
   mutate(trtname = paste0(nrate_kgha,"+",krate_kgha)) #to combine the treatments and treat as factors
 
 rcbd_dfw #w for wrangled version
