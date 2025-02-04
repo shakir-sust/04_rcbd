@@ -181,10 +181,17 @@ rcbd_resid
 
 Now, let's recap the linear model assumptions:  
 
+Very important note: We always check model assumptions based on residuals, not on raw data.
+
+Model assumptions: Variance of the error ~ eiidN(0, sigma_squared)
+
+It means that the residuals are identically and independently distributed normal with a mean of 0 and homogeneous variance of sigma_squared
+
 - Residual independence (no pattern)  
 - Residual variance homogeneity (homoscedasticity)  
 - Residual normality (discuss this!)  
 - Outlier detection (< -3 or > 3)  
+
 
 ## Residual independence  
 - For this, we use the **fitted vs. residual plot**.  
