@@ -65,7 +65,7 @@ rcbd_dfw <- rcbd_df %>% #1st pipe
          nrate_kgha = factor(nrate_kgha),  #"factor()" function converts "numeric" variable to "categorical" variable
          krate_kgha = factor(krate_kgha) #"factor()" function converts "numeric" variable to "categorical" variable
          ) %>% #2nd pipe
-  mutate(trtname = paste0(nrate_kgha,"+",krate_kgha)) #to combine the treatments and treat as factors
+  mutate(trtname = paste0(nrate_kgha,"+",krate_kgha)) #to combine the "nrate_kgha" and "krate_kgha" treatments, then treat the combined variable "trtname" as a factor
 
 rcbd_dfw #w for wrangled version
 ```
@@ -105,8 +105,8 @@ ggplot(rcbd_dfw, aes(x = nrate_kgha,
                     color = nrate_kgha)) +
   geom_boxplot() +
   geom_jitter() +
-  facet_grid(.~krate_kgha) + #creates plots for individual plots to facet by
-  theme(legend.position = "none")
+  facet_grid(.~krate_kgha) + #takes all levels of a specified variable, then creates separate boxplots for each of the variable levels 
+  theme(legend.position = "none") #removes the legends from the graph
 ```
 
 # e) Statistical model  
