@@ -85,6 +85,7 @@ ggplot(rcbd_dfw, aes(x = nrate_kgha,
                     y = yield_kgha,
                     color = nrate_kgha)) +
   geom_boxplot() +
+   stat_boxplot(geom = "errorbar", width = 0.2) + #To draw horizontal error bars (caps) at the ends of the boxplot whiskers
   #geom_point()+
   geom_jitter() +
   theme(legend.position = "none")
@@ -95,6 +96,7 @@ ggplot(rcbd_dfw, aes(x = krate_kgha,
                     y = yield_kgha,
                     color = krate_kgha)) +
   geom_boxplot() +
+  stat_boxplot(geom = "errorbar", width = 0.2) + #To draw horizontal error bars (caps) at the ends of the boxplot whiskers
   geom_jitter() +
   theme(legend.position = "none")
 ```
@@ -104,6 +106,7 @@ ggplot(rcbd_dfw, aes(x = nrate_kgha,
                     y = yield_kgha,
                     color = nrate_kgha)) +
   geom_boxplot() +
+  stat_boxplot(geom = "errorbar", width = 0.2) + #To draw horizontal error bars (caps) at the ends of the boxplot whiskers
   geom_jitter() +
   facet_grid(.~krate_kgha) + #takes all levels of a specified variable, then creates separate boxplots for each of the variable levels 
   theme(legend.position = "none") #removes the legends from the graph
@@ -120,13 +123,16 @@ Below we change the default to sum-to-zero ("contr.sum") before fitting the mode
 
 ```{r model}
 # Changing to sum-to-zero contrast
-options(contrasts = c("contr.sum", "contr.poly"))
+options(contrasts = c("contr.sum", "contr.poly")) #if the variable is categorical, change it to sum to zero; if the variable is continuous, then change it to polynomial 
 
 # Model fitting
-rcbd_mod 
+rcbd_mod <- lm(yield_kgha ~ rep + nrate_kgha*krate_kgha, # the block effect i.e., rep is what separates RCBD from CRD
+               data = rcbd_dfw
+               )
+
 
 # Summary
-summary(rcbd_mod)
+summary(rcbd_mod) #Not the ANOVA table; table for contrast values for each estimate/ coefficients
 ```
 
 ## Model specification tips  
@@ -144,14 +150,17 @@ The `Anova()` function allows us to use **type 3 sum of squares**.
 
 The common functions `aov()` and `anova()` use type 1 SS, which is the wrong choice IF have unbalanced data.
 
+Balanced data = no missing data
+Unbalanced data = contains missing data
+
 If data is balanced, type 1 and 3 give same results.  
 
 For sake of peace of mind, it is simpler to just always use type 3.  
 
 ```{r ANOVA}
-Anova(rcbd_mod, type=3)
+Anova(rcbd_mod, type=3) #Anova (upper case A) is case sensitive
 ```
-Notice how rep (i.e., block in this case) has a significant effect.  
+Considering alpha = 0.1 (10% level of significance, which is not common), notice how rep (i.e., block in this case) has a significant effect.  
 
 This means that we **did well by blocking**, as it was able to absorb some of the overall variability and remove it from the error. Remember how **decreasing error SS** was one way to improve the model statistical power.  
 
