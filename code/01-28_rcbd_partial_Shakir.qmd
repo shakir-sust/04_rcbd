@@ -123,10 +123,10 @@ Below we change the default to sum-to-zero ("contr.sum") before fitting the mode
 
 ```{r model}
 # Changing to sum-to-zero contrast
-options(contrasts = c("contr.sum", "contr.poly")) #if the variable is categorical, change it to sum to zero; if the variable is continuous, then change it to polynomial 
+options(contrasts = c("contr.sum", "contr.poly")) #contrasts = c("contr.sum", "contr.poly") means that if the variable is categorical, change the contrast to sum to zero; if the variable is continuous, then change the contrast to polynomial 
 
 # Model fitting
-rcbd_mod <- lm(yield_kgha ~ rep + nrate_kgha*krate_kgha, # the block effect i.e., rep is what separates RCBD from CRD
+rcbd_mod <- lm(yield_kgha ~ rep + nrate_kgha*krate_kgha, #the block effect i.e., rep is what separates RCBD from CRD
                data = rcbd_dfw
                )
 
