@@ -54,12 +54,16 @@ Since it is a CRD, randomization is unrestricted.
 
 ```{r crd_rand}
 # Setting seed to get same randomization result every time
-set.seed(930)
+set.seed(930) #we use "set.seed" for the sake of reproducibility so that the randomization does not shuffle each time we run this code chunk
 
-crd_rand  
+crd_rand <- crossing(trtname = trts$trtname, #To create a new column "trtname" that basically has the same levels of "trtname" column/variable of the "trts" object created above #the "$" is used to extract the "trtname" column/variable of "trts" object/dataframe
+                     rep = 1:4 #Specifying the number of reps i.e., rep 1-4 #in the above code chunk, we created each treatment once, but in this code chunk, now we have each treatment appearing 4 times one for each of the reps
+                     ) %>%
   # Since plots are organized without a structure, let's number them 1 through 36
-
+  mutate(plot = 1:nrow(.)) %>% #This is the same as creating "(plot = 1:36)"
   # Randomizing trtname to plots, without restrictions 
+  mutate(plot = sample(plot)) %>% #"sample()" function shuffles thing for us
+  arrange(plot) #To sort/rearrange all columns by plots i.e., we want to sort/rearrange the plot numbers from 1 to last #In CRD design, the order of the "rep" column does not really matter, so we do not sort by "rep" in CRD. However, we must sort by "rep" for RCBD design
 
 
 crd_rand
@@ -72,16 +76,34 @@ The number of rows and columns could be decided based on the actual field layout
 Let's assume we have space for 9 rows and 4 columns.  
 
 ```{r crd_layout}
-crd_layout 
+crd_layout <- crd_rand %>%
   # Defining number of rows and columns in the field for plotting purposes
+  #The following repeats all numbers from 1 to 9 four times one after another
+  mutate(row = rep(1:4, each = 9)) %>% #function "rep()" repeats a given set of number(s), where the argument "each = 9" is used to specify how many times the given number(s) will be repeated; For this example, the numbers 1 to 4 are repeated 9 times
+  #The following creates a sequence of number from 1 to 9 and then repeats it 4 times
+  mutate(col = rep(seq(from = 1,
+                       to = 9,#creates a sequence from 1 to 9
+                       by = 1), times = 4 #"by = 1" is to specify the stepsize of the sequence i.e., the sequence will increase by 1
+                   )) %>% #the function "seq()" creates sequence 
+  mutate(plotlabel = paste0(plot,"\n", trtname)) # "\n" to break the line of the string
+                    
+         
 
   # Creating plot and trtname labels for plotting
-
+crd_layout
 ```
 
 Now, let's plot it.
 ```{r crd map}
-
+ggplot(data = crd_layout,
+       aes(x = row, y = col)
+       ) +
+  geom_tile(aes(fill = trtname),
+            color = "black",
+            show.legend = F
+            ) +
+  geom_text(aes(label = plotlabel), vjust = 0.5) +
+  labs()
 
 ```
 
