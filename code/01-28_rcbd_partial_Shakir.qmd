@@ -10,7 +10,7 @@ The goals of this exercise are to:
 
 # a) Setup  
 Here is where we load the packages we will use.  
-```{r setup}
+```{r setup, warning=FALSE, message=FALSE}
 # Loading packages
 install.packages("tidyverse")
 library(tidyverse) # for data wrangling and plotting
@@ -34,18 +34,18 @@ You should NOT analyze a given designed study with a different design than what 
 
 This is not an option!  
 
-```{r data import}
+```{r data import, warning=FALSE, message=FALSE}
 rcbd_df <- read_csv("../data/wheat_nk_balkh.csv")
 
 rcbd_df
 ```
 
 # b) EDA tables  
-```{r summary}
+```{r summary, warning=FALSE, message=FALSE}
 summary(rcbd_df)
 ```
 
-```{r glimpse}
+```{r glimpse, warning=FALSE, message=FALSE}
 glimpse(rcbd_df) #To check variable types i.e., how R is interpreting the variables
 ```
 # c) Wrangling
@@ -59,7 +59,7 @@ glimpse(rcbd_df) #To check variable types i.e., how R is interpreting the variab
 The "pipe" function takes what is on its left and feeds that as the input of what is on its right. For example, the first pipe %>% in the following takes only "rcbd_dfw <- rcbd_df" as the data input and feeds to what is on its left. However, the second pipe takes everything that is on its right and feeds as input to what is on its left. Each pipe on any pipe flow is going to take everything before it (from the very beginning of the code chunk) as the input of the next function that is on the left of that pipe (not just  the immediate previous function as the input). Everything before that 2nd pipe %>% goes into the next function as the input. 
 
 
-```{r rcbd_dfw}
+```{r rcbd_dfw, warning=FALSE, message=FALSE}
 rcbd_dfw <- rcbd_df %>% #1st pipe
   mutate(rep = factor(rep), # "factor()" function converts "rep" from a "numeric" variable to "categorical" variable
          nrate_kgha = factor(nrate_kgha),  #"factor()" function converts "numeric" variable to "categorical" variable
@@ -71,7 +71,7 @@ rcbd_dfw #w for wrangled version
 ```
 
 
-```{r rcbd_dfw}
+```{r rcbd_dfw, warning=FALSE, message=FALSE}
 summary(rcbd_dfw)
 ```
 Number of replicates: 4  
@@ -80,7 +80,7 @@ Number of observations: 4 x 9 = 36
 Yield: from 2795 to 7445 kg/ha  
 
 # d) EDA plots  
-```{r n boxplot}
+```{r n boxplot, warning=FALSE, message=FALSE}
 ggplot(rcbd_dfw, aes(x = nrate_kgha, 
                     y = yield_kgha,
                     color = nrate_kgha)) +
@@ -91,7 +91,7 @@ ggplot(rcbd_dfw, aes(x = nrate_kgha,
   theme(legend.position = "none")
 ```
 
-```{r k boxplot}
+```{r k boxplot, warning=FALSE, message=FALSE}
 ggplot(rcbd_dfw, aes(x = krate_kgha, 
                     y = yield_kgha,
                     color = krate_kgha)) +
@@ -101,7 +101,7 @@ ggplot(rcbd_dfw, aes(x = krate_kgha,
   theme(legend.position = "none")
 ```
 
-```{r nk boxplot}
+```{r nk boxplot, warning=FALSE, message=FALSE}
 ggplot(rcbd_dfw, aes(x = nrate_kgha, 
                     y = yield_kgha,
                     color = nrate_kgha)) +
@@ -121,7 +121,7 @@ In research, we normally are interested in sum-to-zero contrasts.
 Below we change the default to sum-to-zero ("contr.sum") before fitting the model.
 
 
-```{r model}
+```{r model, warning=FALSE, message=FALSE}
 # Changing to sum-to-zero contrast
 options(contrasts = c("contr.sum", "contr.poly")) #contrasts = c("contr.sum", "contr.poly") means that if the variable is categorical, change the contrast to sum to zero; if the variable is continuous, then change the contrast to polynomial 
 
@@ -157,7 +157,7 @@ If data is balanced, type 1 and 3 give same results.
 
 For sake of peace of mind, it is simpler to just always use type 3.  
 
-```{r ANOVA}
+```{r ANOVA, warning=FALSE, message=FALSE}
 Anova(rcbd_mod, type=3) #Anova (upper case A) is case sensitive
 ```
 Considering alpha = 0.1 (10% level of significance, which is not common), notice how rep (i.e., block in this case) has a significant effect.  
@@ -172,7 +172,7 @@ Before we do that, let's check our model assumptions. Remember, a model is only 
 ## Extracting residuals
 First, let's extract our model residuals, and also create studentized residuals.  
 
-```{r rcbd_resid}
+```{r rcbd_resid, warning=FALSE, message=FALSE}
 rcbd_resid <- augment(rcbd_mod) %>%
   mutate(.studresid=rstudent(rcbd_mod))
 
@@ -199,7 +199,7 @@ It means that the residuals are identically and independently distributed normal
 - What we do not want to see: clear pattern, for example, quadratic shape.  
 - Adding a `geom_smooth()` helps with that conclusion. We want to see the smooth line and error bands comprising 0 on the y axis.  
 
-```{r }
+```{r checking for residual independence, warning=FALSE, message=FALSE}
 ggplot(rcbd_resid, aes(x=.fitted, y=.studresid))+
   geom_hline(yintercept = 0, color="red")+
   geom_point(shape = 21,
@@ -222,7 +222,7 @@ Although it seems like there is some pattern, I wouldn't worry here since the er
 - What we do not want to see: residuals increasing as fitted value increases (fan shape).  
 - Adding a `geom_smooth()` helps with that conclusion. We want to see the smooth line and error bands comprising 0 on the y axis.  
 
-```{r }
+```{r checing residual homoscedasticity, warning=FALSE, message=FALSE}
 ggplot(rcbd_resid, aes(x=.fitted, y=.studresid))+
   geom_hline(yintercept = 0, color="red")+
   geom_point(shape = 21,
@@ -243,7 +243,7 @@ Residuals have a mean of 0 and normally distributed
 - What we do not want to see: skewed residuals that do not follow a normal distribution.  
 
 On the QQ plot, we want to see residuals on the black line, meaning they follow their theoretical normal distribution.  
-```{r}
+```{r checking residual normality with qq plot, warning=FALSE, message=FALSE}
 ggplot(rcbd_resid, aes(sample=.studresid))+
   stat_qq(  shape = 21,
             fill = "purple", 
@@ -259,7 +259,7 @@ ggplot(rcbd_resid, aes(sample=.studresid))+
 It's common for some residuals in the tails being off, especially with low N (N=36). Nothing to worry here.  
 
 
-```{r}
+```{r checking residual normality with density plot, warning=FALSE, message=FALSE}
 ggplot(rcbd_resid, aes(x=.studresid))+
   geom_density(color = "black",
                fill = "purple",
@@ -278,7 +278,7 @@ Next.
 - What we do not want to see: too many residuals > 3 or < -3, the farther away form the thresholds the worse.  
 - Adding a `geom_hline()` at the thresholds helps to visualize and diagnose.   
 
-```{r}
+```{r checking residual outliers using fitted vs. residual plot, warning=FALSE, message=FALSE}
 ggplot(rcbd_resid, aes(x=.fitted, y=.studresid))+
   geom_hline(yintercept = 0, color="red")+
   geom_point(shape = 21,
@@ -287,6 +287,7 @@ ggplot(rcbd_resid, aes(x=.fitted, y=.studresid))+
              alpha = .7)+
   geom_smooth()+
   geom_hline(yintercept = c(-3,3), color = "red")+
+  labs(x = "Fitted values", y = "Studentized residuals") +
   theme_bw()
 
 ```
@@ -314,7 +315,7 @@ rcbd_means_all
 # i) Pairwise comparisons  
 Now that we extracted means, let's perform pairwise comparisons among them.  
 
-```{r interaction pwc all}
+```{r interaction pwc all, warning=FALSE, message=FALSE}
 rcbd_cld_all <- cld(rcbd_means_all, 
                    reversed=T, 
                    adjust="none",
@@ -325,7 +326,7 @@ rcbd_cld_all
 
 Let's do some light wrangling here to be able to plot these.  
 
-```{r selected pwc}
+```{r selected pwc, warning=FALSE, message=FALSE}
 rcbd_cld_selected <- rcbd_cld_all 
 
 rcbd_cld_selected
@@ -335,7 +336,7 @@ rcbd_cld_selected
 Let's plot our results, including both **raw data** (for allowing our audience to inspect data distribution) and **statistical model summary (i.e., letter separation)** for inference purposes.    
 Let's make this plot publication ready.  
 
-```{r rcbd final plot}
+```{r rcbd final plot, warning=FALSE, message=FALSE}
 
 ```
 

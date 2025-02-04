@@ -12,7 +12,18 @@ The goals of this exercise are to:
 Here is where we load the packages we will use.  
 ```{r setup}
 # Loading packages
+
+#install.packages("tidyverse")
 library(tidyverse) # for data wrangling and plotting
+
+```
+
+# Importing data
+
+```{r data import}
+rcbd_df <- read_csv("../data/wheat_nk_balkh.csv")
+
+rcbd_df
 ```
 
 # Treatment design  
@@ -25,7 +36,13 @@ Keeping with the same motivational example we've been using, our treatment desig
 
 Let's define our treatments above in an object.  
 ```{r}
-trts 
+#Combining levels of variables/ Finding all combinations for all levels of  variables
+trts <- crossing(nrate_kgha = c(0, 100, 200), #Here, we will give the name of the variables/columns that we want to cross to find all of their possible combinations. For this example, the variables/ columns that we want to cross are "nrate_kgha" and "krate_kgha"  #"c(0, 100, 200)" function to specify the levels of "nrate_kgha" variable which are 0, 100, and 200
+                        krate_kgha = c(0, 30, 60)
+                        ) %>%
+#If we had another factor "phosphorusrate_kgha", we can indicate this "phosphorusrate_kgha" factor inside the "crossing()" function to get all the 3-way combinations across all 3 factors #Next, we want to create a column/ variable for "treatment numbers" because the more treatment combinations we have, the more difficult it becomes to start referring to them by their treatment combinations. So, we may decide to give these treatment combinations numbers [from 1 to 9, in this case]
+  mutate(trtnum = 1:nrow(.)) %>% # "1:nrow(.)" to specify to create rows from the 1st to the last treatment combinations
+  mutate(trtname = paste0(nrate_kgha, "+", krate_kgha)) #We use "paste0()" function to combine different values from different columns
 
 trts
 ```
