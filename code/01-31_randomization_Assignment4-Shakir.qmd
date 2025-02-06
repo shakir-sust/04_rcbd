@@ -54,7 +54,7 @@ Since it is a CRD, randomization is unrestricted.
 
 ```{r crd_rand}
 # Setting seed to get same randomization result every time
-set.seed(930) #we use "set.seed" for the sake of reproducibility so that the randomization does not shuffle and we get the exact same order of randomization each time we run this code chunk
+set.seed(108) #we use "set.seed" for the sake of reproducibility so that the randomization does not shuffle and we get the exact same order of randomization each time we run this code chunk
 
 crd_rand <- crossing(trtname = trts$trtname, #To create a new column "trtname" that basically has the same levels of "trtname" column/variable of the "trts" object created above #the "$" is used to extract the "trtname" column/variable of "trts" object/dataframe
                      rep = 1:4 #Specifying the number of reps i.e., rep 1-4 #in the above code chunk, we created each treatment once, but in this code chunk, now we have each treatment appearing 4 times one for each of the reps
@@ -105,6 +105,7 @@ ggplot(data = crd_layout,
   geom_text(aes(label = plot), fontface = "bold", vjust = -.5)+
   geom_text(aes(label = trtname), vjust = 1)+
   labs(title = "CRD randomization of a 3 x 3 factorial (9 treatments)") +
+  scale_fill_brewer(palette = "Set3") +
   theme_void() #"theme_void()" removes all the x and y axes and leaves only the map itself
 
 ```
@@ -112,17 +113,18 @@ ggplot(data = crd_layout,
 Notice how due to unrestricted randomization, we had the replication of some treatments falling in neighboring plots, e.g. plots 12 and 13 have the same treatment.  
 
 ```{r}
-ggsave("../output/rcbd_layoutmap_class_exercise.png",
+ggsave("../output/crd_layoutmap_Assignment4_Shakir.png",
        width = 6,
        height = 4,
        bg = "white")
 ```
 
+
 # RCBD  
 ## Randomization  
 ```{r rcbd_rand}
 # Setting seed to get same randomization result every time
-set.seed(930) #we use "set.seed" for the sake of reproducibility so that the randomization does not shuffle and we get the exact same order of randomization each time we run this code chunk
+set.seed(309) #we use "set.seed" for the sake of reproducibility so that the randomization does not shuffle and we get the exact same order of randomization each time we run this code chunk
 
 rcbd_rand <- crossing(trtname = trts$trtname, #To create a new column "trtname" that basically has the same levels of "trtname" column/variable of the "trts" object created above #the "$" is used to extract the "trtname" column/variable of "trts" object/dataframe
                       rep = 1:4 #Specifying the number of reps i.e., rep 1-4 #in the above code chunk, we created each treatment once, but in this code chunk, now we have each treatment appearing 4 times one for each of the reps
@@ -184,6 +186,7 @@ ggplot(data = rcbd_layout, aes(x = row,
   geom_text(aes(label = plot), fontface = "bold", vjust = -.5)+
   geom_text(aes(label = trtname), vjust = 1)+
   labs(title = "RCBD randomization of a 3 x 3 factorial (9 treatments)") +
+  scale_fill_brewer(palette = "Set3") +
   theme_void()
 
 ```
@@ -211,7 +214,7 @@ rcbd_rand %>%
 `ggsave()` will save the last plot created in the session, even if from an above chunk. Since the last plot we created was the RCBD layout, we can just go ahead and call ggsave here.  
 
 ```{r}
-ggsave("../output/rcbd_layoutmap_class_exercise.png",
+ggsave("../output/rcbd_layoutmap_Assignment4_Shakir.png",
        width = 6,
        height = 4,
        bg = "white")
