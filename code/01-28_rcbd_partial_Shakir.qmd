@@ -12,17 +12,17 @@ The goals of this exercise are to:
 Here is where we load the packages we will use.  
 ```{r setup, warning=FALSE, message=FALSE}
 # Loading packages
-install.packages("tidyverse")
+#install.packages("tidyverse")
 library(tidyverse) # for data wrangling and plotting
-install.packages("car")
+#install.packages("car")
 library(car) # for Anova function
-install.packages("lme4")
+#install.packages("lme4")
 library(lme4) #for Mixed Effect ANOVA Model
-install.packages("broom")
+#install.packages("broom")
 library(broom) # for model residuals extraction
-install.packages("emmeans")
+#install.packages("emmeans")
 library(emmeans) # for model mean extraction
-install.packages("multcomp")
+#install.packages("multcomp")
 library(multcomp) # for pairwise comparison letter display
 ```
 
@@ -41,11 +41,11 @@ rcbd_df
 ```
 
 # b) EDA tables  
-```{r summary, warning=FALSE, message=FALSE}
+```{r summary EDA tables, warning=FALSE, message=FALSE}
 summary(rcbd_df)
 ```
 
-```{r glimpse, warning=FALSE, message=FALSE}
+```{r glimpse EDA tables, warning=FALSE, message=FALSE}
 glimpse(rcbd_df) #To check variable types i.e., how R is interpreting the variables
 ```
 # c) Wrangling
@@ -59,8 +59,8 @@ glimpse(rcbd_df) #To check variable types i.e., how R is interpreting the variab
 The "pipe" function takes what is on its left and feeds that as the input of what is on its right. For example, the first pipe %>% in the following takes only "rcbd_dfw <- rcbd_df" as the data input and feeds to what is on its left. However, the second pipe takes everything that is on its right and feeds as input to what is on its left. Each pipe on any pipe flow is going to take everything before it (from the very beginning of the code chunk) as the input of the next function that is on the left of that pipe (not just  the immediate previous function as the input). Everything before that 2nd pipe %>% goes into the next function as the input. 
 
 
-```{r rcbd_dfw, warning=FALSE, message=FALSE}
-rcbd_dfw <- rcbd_df %>% #1st pipe
+```{r rcbd_dfw data wrangling, warning=FALSE, message=FALSE}
+rcbd_dfw <- rcbd_df %>% #1st pipe #rcbd_dfw = RCBD wrangled data frame
   mutate(rep = factor(rep), # "factor()" function converts "rep" from a "numeric" variable to "categorical" variable
          nrate_kgha = factor(nrate_kgha),  #"factor()" function converts "numeric" variable to "categorical" variable
          krate_kgha = factor(krate_kgha) #"factor()" function converts "numeric" variable to "categorical" variable
@@ -71,24 +71,27 @@ rcbd_dfw #w for wrangled version
 ```
 
 
-```{r rcbd_dfw, warning=FALSE, message=FALSE}
+```{r rcbd_dfw summary EDA table for the wrangled data frame, warning=FALSE, message=FALSE}
 summary(rcbd_dfw)
 ```
 Number of replicates: 4  
 Number o treatments: 3 N rates x 3 K rates = 9  
-Number of observations: 4 x 9 = 36  
+Number of observations: 4 (# of replicates) x 9 (# of treatments) = 36  
 Yield: from 2795 to 7445 kg/ha  
 
 # d) EDA plots  
 ```{r n boxplot, warning=FALSE, message=FALSE}
 ggplot(rcbd_dfw, aes(x = nrate_kgha, 
                     y = yield_kgha,
-                    color = nrate_kgha)) +
+                    fill = nrate_kgha)) +
   geom_boxplot() +
    stat_boxplot(geom = "errorbar", width = 0.2) + #To draw horizontal error bars (caps) at the ends of the boxplot whiskers
   #geom_point()+
   geom_jitter() +
-  theme(legend.position = "none")
+  theme(legend.position = "none") +
+  labs(x = "Nitrogen Rate (Kg/ Ha)", 
+       y = "Yield (Kg/ Ha)"
+       )
 ```
 
 ```{r k boxplot, warning=FALSE, message=FALSE}
@@ -98,25 +101,54 @@ ggplot(rcbd_dfw, aes(x = krate_kgha,
   geom_boxplot() +
   stat_boxplot(geom = "errorbar", width = 0.2) + #To draw horizontal error bars (caps) at the ends of the boxplot whiskers
   geom_jitter() +
-  theme(legend.position = "none")
+  theme(legend.position = "none") +
+  labs(x = "Potassium Rate (Kg/ Ha)", y = "Yield (Kg/ Ha)") 
 ```
 
-```{r nk boxplot, warning=FALSE, message=FALSE}
+```{r nitrogen*potassium rate boxplot, warning=FALSE, message=FALSE}
 ggplot(rcbd_dfw, aes(x = nrate_kgha, 
                     y = yield_kgha,
-                    color = nrate_kgha)) +
+                    fill = nrate_kgha)) +
   geom_boxplot() +
   stat_boxplot(geom = "errorbar", width = 0.2) + #To draw horizontal error bars (caps) at the ends of the boxplot whiskers
   geom_jitter() +
-  facet_grid(.~krate_kgha) + #takes all levels of a specified variable, then creates separate boxplots for each of the variable levels 
+  theme(legend.position = "none") +
+  facet_grid(.~krate_kgha,
+             labeller = labeller(krate_kgha = function(x) {
+               paste("Potassium Rate (Kg/Ha):", x)
+             })) + #takes all levels of a specified variable, then creates separate boxplots for each of the variable levels 
   theme(legend.position = "none") #removes the legends from the graph
 ```
 
 # e) Statistical model  
 ## Set-to-zero vs. sum-to-zero  
-In R, the default contrast type is set-to-zero.  
 
-In research, we normally are interested in sum-to-zero contrasts.  
+## Shortcut for model specification:
+
+Model specification (long way): y ~ x1 + x2 + x1:x2
+Model specification (short way): y ~ x1*x2
+Both of these same expressions are identical and will do the same operation: y ~ x1 + x2 + x1:x2 == y ~ x1*x2
+
+For this example,
+Model specification (long way): yield_kgha ~ nrate_kgha + krate_kgha + nrate_kgha:krate_kgha
+Model specification (short way): yield_kgha ~ nrate_kgha*krate_kgha
+Both of these same expressions are identidal and will do the same operation:
+yield_kgha ~ nrate_kgha + krate_kgha + nrate_kgha:krate_kgha == yield_kgha ~ nrate_kgha*krate_kgha
+
+"Instead of specifying 
+          `nrate_kgha + krate_kgha + nrate_kgha:krate_kgha`,  
+we could have just used  
+                   `nrate_kgha*krate_kgha`.  
+
+R interprets the `*` as "give me all main effects and interactions".
+
+The more interaction effects a model has, the more efficient using the * becomes." - Dr. Bastos  
+
+## Changing default contrast type from "set-to-zero" to "sum-to-zero"
+
+In R, the default contrast type is *set-to-zero*.  
+
+In research, we normally are interested in *sum-to-zero* contrasts.  
 
 Below we change the default to sum-to-zero ("contr.sum") before fitting the model.
 
@@ -126,7 +158,7 @@ Below we change the default to sum-to-zero ("contr.sum") before fitting the mode
 options(contrasts = c("contr.sum", "contr.poly")) #contrasts = c("contr.sum", "contr.poly") means that if the variable is categorical, change the contrast to sum to zero; if the variable is continuous, then change the contrast to polynomial 
 
 # Model fitting
-rcbd_mod <- lm(yield_kgha ~ rep + nrate_kgha*krate_kgha, #the block effect i.e., rep is what separates RCBD from CRD
+rcbd_mod <- lm(yield_kgha ~ rep + nrate_kgha*krate_kgha, #the block effect i.e., rep is what separates RCBD from CRD. In RCBD, the "rep" is included in the model as a factor. However, "rep" is not included in the model for CRD.
                data = rcbd_dfw
                )
 
@@ -166,15 +198,15 @@ This means that we **did well by blocking**, as it was able to absorb some of th
 
 Since the interaction is significant here, we should extract means and perform pairwise comparisons for the interaction term.
 
-Before we do that, let's check our model assumptions. Remember, a model is only valid for inference (i.e., means and pwc) IF if fulfills the linear model assumptions.  
+Before we do that, let's check our model assumptions. Remember, a model is only valid for inference (i.e., means and pwc) It if fulfills the linear model assumptions.  
 
 # g) Linear model assumptions  
 ## Extracting residuals
 First, let's extract our model residuals, and also create studentized residuals.  
 
 ```{r rcbd_resid, warning=FALSE, message=FALSE}
-rcbd_resid <- augment(rcbd_mod) %>%
-  mutate(.studresid=rstudent(rcbd_mod))
+rcbd_resid <- broom::augment(rcbd_mod) %>% #"augment() function is included in the "broom" package
+  mutate(.studresid=rstudent(rcbd_mod)) #creating studentized residuals in a separate column
 
 rcbd_resid
 ```
@@ -199,7 +231,7 @@ It means that the residuals are identically and independently distributed normal
 - What we do not want to see: clear pattern, for example, quadratic shape.  
 - Adding a `geom_smooth()` helps with that conclusion. We want to see the smooth line and error bands comprising 0 on the y axis.  
 
-```{r checking for residual independence, warning=FALSE, message=FALSE}
+```{r fitted vs. residual plot to check for residual independence, warning=FALSE, message=FALSE}
 ggplot(rcbd_resid, aes(x=.fitted, y=.studresid))+
   geom_hline(yintercept = 0, color="red")+
   geom_point(shape = 21,
@@ -222,7 +254,7 @@ Although it seems like there is some pattern, I wouldn't worry here since the er
 - What we do not want to see: residuals increasing as fitted value increases (fan shape).  
 - Adding a `geom_smooth()` helps with that conclusion. We want to see the smooth line and error bands comprising 0 on the y axis.  
 
-```{r checing residual homoscedasticity, warning=FALSE, message=FALSE}
+```{r fitted vs. residual plot to check for residual homoscedasticity, warning=FALSE, message=FALSE}
 ggplot(rcbd_resid, aes(x=.fitted, y=.studresid))+
   geom_hline(yintercept = 0, color="red")+
   geom_point(shape = 21,
@@ -245,11 +277,11 @@ Residuals have a mean of 0 and normally distributed
 On the QQ plot, we want to see residuals on the black line, meaning they follow their theoretical normal distribution.  
 ```{r checking residual normality with qq plot, warning=FALSE, message=FALSE}
 ggplot(rcbd_resid, aes(sample=.studresid))+
-  stat_qq(  shape = 21,
-            fill = "purple", 
-            size = 3,
-            alpha = .7
-  )+
+  stat_qq(shape = 21,
+          fill = "purple", 
+          size = 3,
+          alpha = .7
+          ) +
   stat_qq_line()+
   labs(x = "Theoretical quantile",
        y = "Sample quantile")+
@@ -278,7 +310,7 @@ Next.
 - What we do not want to see: too many residuals > 3 or < -3, the farther away form the thresholds the worse.  
 - Adding a `geom_hline()` at the thresholds helps to visualize and diagnose.   
 
-```{r checking residual outliers using fitted vs. residual plot, warning=FALSE, message=FALSE}
+```{r fitted vs. residual plot to check for residual outliers, warning=FALSE, message=FALSE}
 ggplot(rcbd_resid, aes(x=.fitted, y=.studresid))+
   geom_hline(yintercept = 0, color="red")+
   geom_point(shape = 21,
@@ -322,7 +354,7 @@ rcbd_means_all
 ```{r interaction means n inside k: to extract the means of nitrogen rates inside each levels of potassim rates}
 #If our goal is to find the best in Nitrogen rates inside each of the Potassium rates, we will extract the means of nitrogen inside potassim rates:
 
-rcbd_means_nk <- emmeans(rcbd_mod, ~nrate_kgha | krate_kgha) #We are asking  for all the Nitrogen rates inside each one of the Potassium rates
+rcbd_means_nk <- emmeans(rcbd_mod, ~nrate_kgha | krate_kgha) #"~nrate_kgha | krate_kgha" means we are asking  for all the Nitrogen rates inside each one of the Potassium rates
 
 #We use "|" for interaction means of Nitrogen levels (levels of one factor) inside Potassium levels (levels of another factor) i.e., one factor inside the levels of other
 
@@ -334,7 +366,7 @@ rcbd_means_nk
 ```{r interaction means k inside n: to extract the means of potassium inside nitrogen rates}
 #If our goal is to find the best Potassium rate inside each Nitrogen rates, we will run the following:
 
-rcbd_means_kn <- emmeans(rcbd_mod, ~krate_kgha | nrate_kgha) #We are asking the Potassium rates inside each one of the Nitrogen rates
+rcbd_means_kn <- emmeans(rcbd_mod, ~krate_kgha | nrate_kgha) #"~krate_kgha | nrate_kgha" means we are asking the Potassium rates inside each one of the Nitrogen rates
 
 #We use "|" for interaction means of Potassium levels (levels of one factor) inside Nitrogen levels (levels of another factor) i.e., one factor inside the levels of other
 #Important note: flipping the order of krate_kgha either before or after the "|" sign makes a difference
@@ -343,6 +375,8 @@ rcbd_means_kn
 
 # i) Pairwise comparisons  
 Now that we extracted means, let's perform pairwise comparisons among them.  
+
+## Pairwise comparisons of all combinatinos of nitrogen*potassium interaction levels  
 
 ```{r interaction pwc all, warning=FALSE, message=FALSE}
 rcbd_cld_all <- cld(rcbd_means_all,
@@ -356,6 +390,7 @@ rcbd_cld_all <- cld(rcbd_means_all,
 
 rcbd_cld_all
 ```
+## Pairwise comparisons of all levels of nitrogen rates inside each level of potassium rates  
 
 ```{r interaction pwc n inside k}
 rcbd_cld_nk <- cld(rcbd_means_nk, 
@@ -366,10 +401,31 @@ rcbd_cld_nk <- cld(rcbd_means_nk,
 #Multiple comparisons for Nitrogen groups only within the groups of Potassium
 rcbd_cld_nk
 ```
+## Pairwise comparisons of all levels of potassium rates inside each level of nitrogen rates  
+
+
+```{r interaction pwc k inside n}
+rcbd_cld_kn <- cld(rcbd_means_kn, 
+                   reversed=T, #Reverses the order of appearance from highest to lowest in the columns (default is lowest to highest)
+                   adjust="none", #To specify the type of multiple comparison adjustment e.g., type in "tukey" to use the Tukey's adjustment; "none" to use no adjustment
+               Letters=letters#Lower case "letters" is a native object of R that displays all the letters of the Alphabet in lowercase; The argument here is the upper case "Letters" which is a function, I want "Letters" function to follow the order of the lower case "letters" object
+               ) 
+#Multiple comparisons for only Potassium groups  within the groups of Nitrogen
+rcbd_cld_kn
+```
+Notice how different types of pwc (which are actually coming from differences in how we extracted the means) are testing different hypothesis. 
+
+# g) Final plot  
+
+Let's plot our results, including both **raw data** (for allowing our audience to inspect data distribution) and **statistical model summary (i.e., letter separation)** for inference purposes.   
+
+Let's make these plots publication ready.  
+
+## Boxplots with pairwise comparisons for all combinations of nitrogen*potassium level interactions
 
 Let's do some light wrangling here to be able to plot these.  
 
-```{r selected pwc, warning=FALSE, message=FALSE}
+```{r data wrangling for crd plot with all combinations of nitrogen*potassium level interactions, warning=FALSE, message=FALSE}
 rcbd_cld_selected <- rcbd_cld_all %>% #At this point, "crd_cld_al" is not a data frame and cannot be used to plot using ggplot. The first thing we need to do is to convert the "crd_cld_all" into a data frame using the function "as.data.frame()"
   as.data.frame() %>%
   mutate(letter = trimws(.group)) %>% #To remove the wide spaces from the ".group" column, we will a create a new column which we will call "letter" and use the function "trimws()" [which stands for trim wide space]. This will remove the extra spaces from the ".group" column and store the letters in a new column called "letter"
@@ -378,11 +434,8 @@ rcbd_cld_selected <- rcbd_cld_all %>% #At this point, "crd_cld_al" is not a data
 rcbd_cld_selected
 ```
 
-# g) Final plot  
-Let's plot our results, including both **raw data** (for allowing our audience to inspect data distribution) and **statistical model summary (i.e., letter separation)** for inference purposes.    
-Let's make this plot publication ready.  
 
-```{r rcbd final plot, warning=FALSE, message=FALSE}
+```{r rcbd final boxplot plot with all combinations of nitrogen*potassium level interactions, warning=FALSE, message=FALSE}
 
 ggplot() +
   # Raw data and boxplots  
@@ -395,10 +448,9 @@ ggplot() +
   theme(legend.position = "none") +
   # Adding letters
   geom_label(data = rcbd_cld_selected,
-             aes(x = trtname, #We want to see the nitrogen rates in the x axis for all levels of pottasium rates
+             aes(x = trtname, #We want to see the treatments in the x axis for all levels of pottasium rates
                  y = emmean,
-                 label = letter
-                 ),
+                 label = letter),
              size = 3,
              label.padding = unit(.1, "lines")) +
   #facet_grid(.~ nrate_kgha,
@@ -409,25 +461,42 @@ ggplot() +
    scale_fill_viridis_d() + #Color-blind friendly fill theme
    scale_color_viridis_d() #changes the dots to color-blind friendly
 
-ggsave("../output/rcbd_means.png",
+ggsave("../output/rcbd_nk_interaction_boxplot.png",
        height = 4,
        width = 6
        )
 ```
 
-```{r}
+
+## Boxplots with pairwise comparisons for all levels of nitrogen rates inside each level of potassium rates  
+
+```{r rcbd plot interaction pwc Potassium (k) inside Nitrogen (n) rates}
+
+#For interaction pwc Potassium (k) inside Nitrogen (n) rates
+rcbd_cld_kn_selected <- rcbd_cld_kn %>% #At this point, "crd_cld_kn" is not a data frame and cannot be used to plot using ggplot. The first thing we need to do is to convert the "crd_cld_all" into a data frame using the function "as.data.frame()"
+  as.data.frame() %>%
+  mutate(letter = trimws(.group)) %>% #To remove the wide spaces from the ".group" column, we will a create a new column which we will call "letter" and use the function "trimws()" [which stands for trim wide space]. This will remove the extra spaces from the ".group" column and store the letters in a new column called "letter"
+  mutate(trtname = paste0(nrate_kgha, "+", krate_kgha)) #to combine the "nrate_kgha" and "krate_kgha" treatments, then treat the combined variable "trtname" as a factor
+
+rcbd_cld_kn_selected
+```
+
+```{r rcbd plot interaction pwc nitrogen (n) inside potassium (k) rates}
+
 ggplot() +
   # Raw data and boxplots  
   geom_boxplot(data = rcbd_dfw,
-               aes(x = krate_kgha, y = yield_kgha,
-                   fill = krate_kgha )) + #We want to see the nitrogen rate in the x axis for all levels of potassium rates
+               aes(x = krate_kgha, 
+                   y = yield_kgha,
+                   fill = krate_kgha 
+                   )) + #We want to see the nitrogen rate in the x axis for all levels of potassium rates
   geom_jitter() +
   theme(legend.position = "none") +
   # Adding letters
-  geom_label(data = rcbd_cld_nk,
+  geom_label(data = rcbd_cld_kn_selected,
              aes(x = krate_kgha, #We want to see the nitrogen rates in the x axis for all levels of pottasium rates
                  y = emmean,
-                 label = letters
+                 label = letter
                  )) +
   facet_grid(.~ nrate_kgha,
              labeller = labeller(nrate_kgha = function(x) {
@@ -435,6 +504,54 @@ ggplot() +
              })) + #Within Nitrogen rates, we want to compare Potassium rates. So, "nrate_kgha" will go in the "facet_grid()"  
    labs(x = "Potassium Rate (Kg/ Ha)", y = "Yield (Kg/ Ha)") +
    stat_boxplot(geom = "errorbar", width = 0.2)
+
+ggsave("../output/rcbd_n_inside_k_boxplot.png",
+       height = 4,
+       width = 6
+       )
+```
+## Boxplots with pairwise comparisons for all levels of potassium rates inside each level of nitrogen rates  
+
+
+```{r data wrangling for rcbd plot interaction pwc Potassium (k) inside Nitrogen (n) rates, warning=FALSE, message=FALSE}
+
+#For interaction pwc Potassium (k) inside Nitrogen (n) rates
+
+rcbd_cld_nk_selected <- rcbd_cld_nk %>% #At this point, "crd_cld_nk_a" is not a data frame and cannot be used to plot using ggplot. The first thing we need to do is to convert the "crd_cld_nk_selected_a" into a data frame using the function "as.data.frame()"
+  as.data.frame() %>%
+  mutate(letter = trimws(.group)) %>% #To remove the wide spaces from the ".group" column, we will a create a new column which we will call "letter" and use the function "trimws()" [which stands for trim wide space]. This will remove the extra spaces from the ".group" column and store the letters in a new column called "letter"
+  mutate(trtname = paste0(nrate_kgha, "+", krate_kgha)) #to combine the "nrate_kgha" and "krate_kgha" treatments, then treat the combined variable "trtname" as a factor
+
+rcbd_cld_nk_selected
 ```
 
+
+```{r rcbd plot interaction pwc Potassium (k) inside Nitrogen (n) rates, warning=FALSE, message=FALSE}
+ggplot() +
+  # Raw data and boxplots  
+  geom_boxplot(data = rcbd_dfw,
+               aes(x = nrate_kgha, 
+                   y = yield_kgha,
+                   fill = nrate_kgha #To color the boxplots by "nrate_kgha"
+                   )) + #We want to see the potassium rate in the x axis for all levels of nitrogen rates
+  geom_jitter() +
+  theme(legend.position = "none") +
+  # Adding letters
+  geom_label(data = rcbd_cld_nk_selected,
+             aes(x = nrate_kgha, #We want to see the pottasium rate in the x axis for all levels of nitrogen rates
+                 y = emmean,
+                 label = letter
+                 )) +
+  facet_grid(.~ krate_kgha,
+             labeller = labeller(krate_kgha = function(x) {
+               paste("Potassium Rate (Kg/Ha):", x)
+             })) + #Within potassium rates, we want to compare nitrogen rates. So, "krate_kgha" will go in the "facet_grid()"  
+  labs(x = "Nitrogen Rate (Kg/ Ha)", y = "Yield (Kg/ Ha)") +
+   stat_boxplot(geom = "errorbar", width = 0.2)
+
+ggsave("../output/rcbd_k_inside_n_boxplot.png",
+       height = 4,
+       width = 6
+       )
+```
 
