@@ -94,6 +94,7 @@ crd_layout
 ```
 
 Now, let's plot it.
+
 ```{r crd map}
 ggplot(data = crd_layout,
        aes(x = row, y = -col) #"y = -col" to change the order of number appearance in the column into 'top to bottom' order instead of 'bottom to top' order

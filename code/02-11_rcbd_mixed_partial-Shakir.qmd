@@ -109,13 +109,13 @@ That is because `lm()` only handles one variance component (the error itself).
 To account for more than one variance component (i.e., random effects and error), we can use function `lmer()` from package `lme4`. Function: lme4::lmer()
 
 
-```{r model}
+```{r model for mixed-effect model}
 # Changing to sum-to-zero contrast
 options(contrasts = c("contr.sum", "contr.poly"))
 
 # Model fitting
 rcbd_mix_mod <- lme4::lmer(yield_kgha ~ nrate_kgha*krate_kgha + #We specify the interaction of the fixed effects first
-                           (1|rep), #Syntax for random effect "rep" i.e., block effect in this case #(1|location/rep) means reps/blocks are nested inside location. we specify the factor that has higher hierarchy, then the factor with lower hierarchy is specified afterwards
+                           (1|rep), #Syntax for random effect "rep" i.e., block effect in this case
                            data = rcbd_dfw
                            )
 
@@ -129,19 +129,39 @@ Notice now how the `summary()` above has a new section for **random effects**.
 
 The variance attributed to blocks is 59932, and that still left in the residual error is 376416. 
 
-Therefore, blocks are responsible for 59932 / (59932 + 376416) = **14% of the total noise** in this model.  
+Therefore, blocks are responsible for 59932 / (59932 + 376416) = **14% of the total noise** in this model. 
+
+## Multi-location analysis of mixed-effects model
+
+For multi-location analysis, the large hierarchy factor is "location" (not included in the excel file), and lower hierarchy factor is "rep" (i.e., "block")
+
+```{r model for mixed-effect model}
+# Changing to sum-to-zero contrast
+options(contrasts = c("contr.sum", "contr.poly"))
+
+# Model fitting
+rcbd_mix_multiloc_mod <- lme4::lmer(yield_kgha ~ nrate_kgha*krate_kgha + #We specify the interaction of the fixed effects first
+                           (1|location/rep), #(1|location/rep) means reps/blocks are nested inside location. At first, we specify the factor that has higher hierarchy i.e., location, then the factor with lower hierarchy i.e., rep is specified afterwards
+                           data = rcbd_dfw
+                           )
+
+# Summary
+summary(rcbd_mix_multiloc_mod)
+```
+
 
 # f) ANOVA table  
 ```{r ANOVA}
 Anova(rcbd_mix_mod, type=3)
 ```
+
 Notice how this table is now titled "Analysis of Deviance Table". That's because we are using REML instead of mean squares.  
 
 Also notice how rep (i.e., block in this case) does not appear in the ANOVA table above. That's because it only displays **fixed effects**.
 
 As before, since the interaction is significant here, we should extract means and perform pairwise comparisons for the interaction term.
 
-Before we do that, let's check our model assumptions. Remember, a model is only valid for inference (i.e., means and pwc) IF if fulfills the linear model assumptions.  
+Before we do that, let's check our model assumptions. Remember, a model is only valid for inference (i.e., means and pwc) IF it fulfills the linear model assumptions.  
 
 # g) Linear model assumptions  
 ## Extracting residuals
@@ -163,7 +183,9 @@ Now, let's recap the linear model assumptions:
 - Normality  
 - Outlier detection (< -3 or > 3)  
 
-One difference in mixed models is that the 3 first assumptions are also applied to the **random effects**, so we need to check it for them as well.  
+One difference in mixed models is that the 3 first assumptions (i.e., independence, homoscedasticity/homogeneous variance, normality) are also applied to the **random effect (block/rep, in this case)**, so we need to check it for them as well.  
+
+My note: For mixed-effects model, the first 3 assumptions (i.e., independence, homoscedasticiy/homogeneous variance, normality) applies for the random effect (block/rep, in this case). So, we need to check these assumptions for "rep" (random effect) as well.
 
 ### Random effects are iid ~ N(0,var_a)  
 ```{r randeff_rep}
@@ -182,14 +204,16 @@ ggplot(randeff_rep, aes(sample=`(Intercept)`))+
             alpha = .7
   )+
   stat_qq_line()+
+  theme_bw() +
   labs(x = "Theoretical quantile",
-       y = "Sample quantile")+
-  theme_bw()
+       y = "Sample quantile")
 ```
+We have only 4 blocks. So, we have only 4 datapoints associated with the blocks to check for the normality assumption of the random effect i.e., block.
+
 Nothing to worry here, especially since we only have 4 points.  
 
 ### Within-group errors are iid ~ N(0, var_e)  
-```{r }
+```{r, message=FALSE, warning=FALSE}
 ggplot(rcbd_mix_resid, aes(x=.fitted, y=.studresid))+
   geom_hline(yintercept = 0, color="red")+
   geom_point(shape = 21,
@@ -198,14 +222,16 @@ ggplot(rcbd_mix_resid, aes(x=.fitted, y=.studresid))+
              alpha = .7)+
   geom_smooth()+
   geom_hline(yintercept = c(-3,3), color = "red")+
-  theme_bw()
+  theme_bw() +
+  labs(x = "Fitted values",
+       y = "Studentized residuals")
 ```
 
-- **Independence**: seems liker there is a potential pattern, but since error bands comprise 0 on the y-axis, I'm not worried.  
+- **Independence**: seems like there is a potential pattern, but since error bands comprise 0 on the y-axis, I'm not worried.  
 
 - **Variance homoscedastic**: seems constant across the x-axis.   
 
-- **Outliers**: nothing outside the -3,3 boundaries.  
+- **Outliers**: nothing outside the -3,3 boundaries. *From the fitted vs. residual plot, we see that all residuals fall within [-3, 3] interval. Hence, there is no outlier present to skew the model interpretation.*  
 
 
 ```{r QQ plot for residual}
@@ -221,6 +247,9 @@ ggplot(rcbd_mix_resid, aes(sample=.studresid))+
   theme_bw()
 ```
 
+In the QQ plot, the residuals fall closely around the QQ line with no strong curvature pattern or heavy-tail deviations. 
+
+
 ```{r density plot}
 ggplot(rcbd_mix_resid, aes(x=.studresid))+
   geom_density(color = "black",
@@ -230,6 +259,10 @@ ggplot(rcbd_mix_resid, aes(x=.studresid))+
   theme_bw()
 
 ```
+
+The density plot appears to have a normal distribution even though the tails are a little bit off. 
+
+Hence, the residual normality assumption appears to hold.
 
 - **Normality**: residuals seem normal.  
 

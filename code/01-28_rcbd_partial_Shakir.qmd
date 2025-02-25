@@ -85,7 +85,6 @@ ggplot(rcbd_dfw, aes(x = nrate_kgha,
                     y = yield_kgha,
                     fill = nrate_kgha)) +
   geom_boxplot() +
-   stat_boxplot(geom = "errorbar", width = 0.2) + #To draw horizontal error bars (caps) at the ends of the boxplot whiskers
   #geom_point()+
   geom_jitter() +
   theme(legend.position = "none") +
@@ -99,7 +98,6 @@ ggplot(rcbd_dfw, aes(x = krate_kgha,
                     y = yield_kgha,
                     color = krate_kgha)) +
   geom_boxplot() +
-  stat_boxplot(geom = "errorbar", width = 0.2) + #To draw horizontal error bars (caps) at the ends of the boxplot whiskers
   geom_jitter() +
   theme(legend.position = "none") +
   labs(x = "Potassium Rate (Kg/ Ha)", y = "Yield (Kg/ Ha)") 
@@ -110,7 +108,6 @@ ggplot(rcbd_dfw, aes(x = nrate_kgha,
                     y = yield_kgha,
                     fill = nrate_kgha)) +
   geom_boxplot() +
-  stat_boxplot(geom = "errorbar", width = 0.2) + #To draw horizontal error bars (caps) at the ends of the boxplot whiskers
   geom_jitter() +
   theme(legend.position = "none") +
   facet_grid(.~krate_kgha,
@@ -205,7 +202,7 @@ Before we do that, let's check our model assumptions. Remember, a model is only 
 First, let's extract our model residuals, and also create studentized residuals.  
 
 ```{r rcbd_resid, warning=FALSE, message=FALSE}
-rcbd_resid <- broom::augment(rcbd_mod) %>% #"augment() function is included in the "broom" package
+rcbd_resid <- broom::augment(rcbd_mod) %>% #augment():takes a fitted model object (like one created by lm(), glm(), etc.) and returns a data frame (typically a tibble) that combines the original data with additional columns containing model diagnostics e.g., .fitted, .resid, .cooksd, .std.resid #"augment() function is included in the "broom" package
   mutate(.studresid=rstudent(rcbd_mod)) #creating studentized residuals in a separate column
 
 rcbd_resid
@@ -452,6 +449,7 @@ rcbd_cld_all
 Let's do some light wrangling here to be able to plot these.  
 
 ```{r data wrangling for crd plot with all combinations of nitrogen*potassium level interactions, warning=FALSE, message=FALSE}
+
 rcbd_cld_selected <- rcbd_cld_all %>% #At this point, "crd_cld_al" is not a data frame and cannot be used to plot using ggplot. The first thing we need to do is to convert the "crd_cld_all" into a data frame using the function "as.data.frame()"
   as.data.frame() %>%
   mutate(letter = trimws(.group)) %>% #To remove the wide spaces from the ".group" column, we will a create a new column which we will call "letter" and use the function "trimws()" [which stands for trim wide space]. This will remove the extra spaces from the ".group" column and store the letters in a new column called "letter"

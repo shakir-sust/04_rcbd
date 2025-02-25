@@ -129,7 +129,7 @@ rcbd_rand <- crossing(trtname = trts$trtname, #To create a new column "trtname" 
                       ) %>%
   arrange(rep) %>% #To sort/rearrange all columns by reps. In RCBD design, we must sort by "rep" (i.e., block number) because we are gonna be randomizing individually within each one of these reps i.e., blocks
   group_by(rep) %>% #To group by "rep" i.e., "blocks"
-  mutate(trtname = sample(trtname)) %>%
+  mutate(trtname = sample(trtname)) %>% #used for random sampling and shuffling elements of a vector
   mutate(plot = (rep*100) + 1:9) %>%
   ungroup()
   
@@ -140,6 +140,7 @@ rcbd_rand
 ```
 
 Let's check if in fact each treatment appears once per block.  
+
 ```{r}
 rcbd_rand %>%
   group_by(rep, trtname) %>% #We are grouping by "rep" and "trtname" to find how many times their combinations appear i.e., to check there is no duplicate for each treatment combination
@@ -176,11 +177,10 @@ rcbd_layout
 Now, let's plot it.
 ```{r rcbd map}
 ggplot(data = rcbd_layout, aes(x = row, 
-                               y = -col))+
+                               y = -col)) +
   geom_tile(aes(fill = trtname),
             color = "black",
-            show.legend = F
-  )+
+            show.legend = F) +
   geom_text(aes(label = plot), fontface = "bold", vjust = -.5)+
   geom_text(aes(label = trtname), vjust = 1)+
   labs(title = "RCBD randomization of a 3 x 3 factorial (9 treatments)") +
